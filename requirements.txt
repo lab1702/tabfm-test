@@ -1,0 +1,8 @@
+# CUDA-enabled torch wheels for Windows (PyPI's Windows wheels are CPU-only;
+# Linux gets CUDA either way, macOS falls back to PyPI's MPS-enabled wheel)
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+tabfm
+torch
+safetensors
+pycm
