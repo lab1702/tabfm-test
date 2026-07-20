@@ -37,11 +37,13 @@ into `~/.cache/huggingface`; later runs use the cache.
 ## Usage
 
 ```bash
-python predict_species.py N_REPEATS TEST_PERCENT
+python predict_species.py N_REPEATS TEST_PERCENT [--n-estimators N]
 ```
 
 - `N_REPEATS` — how many times to randomly select test rows
 - `TEST_PERCENT` — percent of rows held out as the test set each time
+- `--n-estimators N` — TabFM ensemble size (default: 8); higher is slower
+  but can be slightly more accurate
 
 Example:
 
@@ -56,7 +58,7 @@ plus overall and per-class statistics, computed by
 [pycm](https://www.pycm.io/) on the predictions pooled across all runs:
 
 ```
-Run 1/5: train=275 test=69 accuracy=0.9855 (79.0s)
+Run 1/5: train=275 test=69 accuracy=0.9855 (19.7s)
 ...
 Accuracy over 5 run(s) with 20% test rows: mean=0.9928 std=0.0072 ...
 
@@ -70,7 +72,8 @@ Kappa           0.98853
 ```
 
 The script auto-selects the fastest device: NVIDIA GPU (CUDA) → Apple GPU
-(MPS) → CPU. On CPU expect roughly 80 s per repeat; a GPU is much faster.
+(MPS) → CPU. On CPU expect roughly 20 s per repeat at the default ensemble
+size; a GPU is much faster.
 
 ## Using TabFM in your own code
 
@@ -94,9 +97,10 @@ Things worth knowing:
 - **Input**: pandas DataFrames with mixed types work directly. Categorical
   string columns, datetime-looking text, and missing values (NaN) are all
   handled by TabFM's built-in preprocessing — no manual encoding needed.
-- **Ensembling**: `TabFMClassifier(model, n_estimators=32)` averages 32
-  differently-preprocessed views of the data. Lower it (e.g. 8) for a big
-  speedup at a small accuracy cost.
+- **Ensembling**: `n_estimators` controls how many differently-preprocessed
+  views of the data get averaged (the package default is 32; this script
+  defaults to 8 via `--n-estimators`). Higher is slower but can be slightly
+  more accurate.
 - **Limits**: the pretrained classifier supports up to 10 classes and 500
   features by default; very large training sets get subsampled into context.
 - **Regression**: use `TabFMRegressor` with

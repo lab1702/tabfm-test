@@ -4,10 +4,12 @@ Repeatedly holds out a random subset of rows, fits TabFM (in-context) on the
 remaining rows, predicts species for the held-out rows, and reports accuracy.
 
 Usage:
-    python predict_species.py N_REPEATS TEST_PERCENT
+    python predict_species.py N_REPEATS TEST_PERCENT [--n-estimators N]
 
     N_REPEATS     how many times to randomly select test rows (e.g. 5)
     TEST_PERCENT  percent of rows used as the test set each time (e.g. 20)
+    --n-estimators  TabFM ensemble size; higher is slower but can be more
+                    accurate (default: 8)
 """
 
 import argparse
@@ -50,12 +52,21 @@ def parse_args() -> argparse.Namespace:
         type=float,
         help="percent of rows to hold out as the test set (0-100)",
     )
+    parser.add_argument(
+        "--n-estimators",
+        type=int,
+        default=8,
+        help="TabFM ensemble size; higher is slower but can be more "
+             "accurate (default: %(default)s)",
+    )
     args = parser.parse_args()
 
     if args.n_repeats < 1:
         parser.error("N_REPEATS must be at least 1")
     if not 0 < args.test_percent < 100:
         parser.error("TEST_PERCENT must be between 0 and 100 (exclusive)")
+    if args.n_estimators < 1:
+        parser.error("--n-estimators must be at least 1")
     return args
 
 
@@ -114,7 +125,11 @@ def main() -> None:
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=args.test_percent / 100, random_state=BASE_SEED + i
         )
-        clf = TabFMClassifier(model=model, random_state=BASE_SEED + i)
+        clf = TabFMClassifier(
+            model=model,
+            n_estimators=args.n_estimators,
+            random_state=BASE_SEED + i,
+        )
         start = time.time()
         clf.fit(X_train, y_train)
         preds = clf.predict(X_test)
