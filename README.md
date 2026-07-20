@@ -37,13 +37,15 @@ into `~/.cache/huggingface`; later runs use the cache.
 ## Usage
 
 ```bash
-python predict_species.py N_REPEATS TEST_PERCENT [--n-estimators N]
+python predict_species.py N_REPEATS TEST_PERCENT [--n-estimators N] [--all-stats]
 ```
 
 - `N_REPEATS` — how many times to randomly select test rows
 - `TEST_PERCENT` — percent of rows held out as the test set each time
 - `--n-estimators N` — TabFM ensemble size (default: 8); higher is slower
   but can be slightly more accurate
+- `--all-stats` — print every statistic pycm computes; without it the
+  report shows the subset matching R caret's `confusionMatrix()` output
 
 Example:
 
@@ -53,9 +55,11 @@ python predict_species.py 5 20
 
 Each repeat draws a fresh random split, fits TabFM on the training rows, and
 predicts the held-out rows. The script prints per-run accuracy, a summary
-(mean/std/min/max) across runs, and a full confusion-matrix report — matrix
-plus overall and per-class statistics, computed by
-[pycm](https://www.pycm.io/) on the predictions pooled across all runs:
+(mean/std/min/max) across runs, and a confusion-matrix report computed by
+[pycm](https://www.pycm.io/) on the predictions pooled across all runs —
+by default the statistics R caret's `confusionMatrix()` reports (accuracy,
+95% CI, NIR, Kappa, and per-class sensitivity/specificity/predictive
+values), or everything pycm offers with `--all-stats`:
 
 ```
 Run 1/5: train=275 test=69 accuracy=0.9855 (19.7s)

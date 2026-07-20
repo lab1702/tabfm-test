@@ -5,11 +5,14 @@ remaining rows, predicts species for the held-out rows, and reports accuracy.
 
 Usage:
     python predict_species.py N_REPEATS TEST_PERCENT [--n-estimators N]
+                              [--all-stats]
 
     N_REPEATS     how many times to randomly select test rows (e.g. 5)
     TEST_PERCENT  percent of rows used as the test set each time (e.g. 20)
     --n-estimators  TabFM ensemble size; higher is slower but can be more
                     accurate (default: 8)
+    --all-stats   print every statistic pycm computes; without it, print
+                  the subset matching R caret's confusionMatrix() output
 """
 
 import argparse
@@ -58,6 +61,12 @@ def parse_args() -> argparse.Namespace:
         default=8,
         help="TabFM ensemble size; higher is slower but can be more "
              "accurate (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--all-stats",
+        action="store_true",
+        help="print every statistic pycm computes instead of the "
+             "R caret confusionMatrix()-style subset",
     )
     args = parser.parse_args()
 
@@ -151,7 +160,16 @@ def main() -> None:
           f"(pooled over all {args.n_repeats} run(s)):\n")
     cm = ConfusionMatrix(actual_vector=actual_all, predict_vector=predicted_all)
     cm.print_matrix()
-    cm.stat()
+    if args.all_stats:
+        cm.stat()
+    else:
+        # The subset of pycm statistics that R caret's confusionMatrix()
+        # reports: TPR=Sensitivity, TNR=Specificity, PRE=Prevalence,
+        # TOPR=Detection Prevalence, AUC=Balanced Accuracy.
+        cm.stat(
+            overall_param=["Overall ACC", "95% CI", "NIR", "P-Value", "Kappa"],
+            class_param=["TPR", "TNR", "PPV", "NPV", "PRE", "TOPR", "AUC"],
+        )
 
 
 if __name__ == "__main__":
