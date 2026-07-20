@@ -61,19 +61,7 @@ by default the statistics R caret's `confusionMatrix()` reports (accuracy,
 95% CI, NIR, Kappa, and per-class sensitivity/specificity/predictive
 values), or everything pycm offers with `--all-stats`:
 
-```
-Run 1/5: train=275 test=69 accuracy=0.9855 (19.7s)
-...
-Accuracy over 5 run(s) with 20% test rows: mean=0.9928 std=0.0072 ...
-
-Predict         Adelie          Chinstrap       Gentoo
-Actual
-Adelie          63              0               1
-...
-Overall ACC     0.99275
-Kappa           0.98853
-...
-```
+![Terminal output of predict_species.py: per-run accuracy, summary across runs, pooled confusion matrix, and caret-style statistics](screenshot.png)
 
 Because repeats draw independent random splits, the same penguin can appear
 in several test sets and is counted each time in the pooled report. The
