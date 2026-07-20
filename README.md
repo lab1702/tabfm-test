@@ -75,6 +75,12 @@ Kappa           0.98853
 ...
 ```
 
+Because repeats draw independent random splits, the same penguin can appear
+in several test sets and is counted each time in the pooled report. The
+matrix and point estimates are unaffected, but sample-size-based statistics
+(95% CI, P-Value) treat the pooled predictions as independent and so come
+out somewhat optimistic.
+
 The script auto-selects the fastest device: NVIDIA GPU (CUDA) → Apple GPU
 (MPS) → CPU. On CPU expect roughly 20 s per repeat at the default ensemble
 size; a GPU is much faster.

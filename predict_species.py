@@ -18,6 +18,7 @@ Usage:
 import argparse
 import os
 import time
+from pathlib import Path
 
 # Hide Hugging Face download/progress noise; must be set before
 # huggingface_hub is imported.
@@ -36,7 +37,8 @@ from sklearn.model_selection import train_test_split
 from tabfm import TabFMClassifier
 from tabfm.src.pytorch import tabfm_v1_0_0
 
-CSV_PATH = "penguins.csv"
+# Resolve relative to this file so the script works from any directory.
+CSV_PATH = Path(__file__).resolve().parent / "penguins.csv"
 TARGET = "species"
 BASE_SEED = 42
 
@@ -139,7 +141,12 @@ def main() -> None:
             n_estimators=args.n_estimators,
             random_state=BASE_SEED + i,
         )
-        start = time.time()
+        missing = set(y.unique()) - set(y_train.unique())
+        if missing:
+            print(f"Warning: run {i + 1} training split has no rows for: "
+                  f"{', '.join(sorted(missing))} — those species cannot be "
+                  f"predicted this run")
+        start = time.perf_counter()
         clf.fit(X_train, y_train)
         preds = clf.predict(X_test)
         acc = accuracy_score(y_test, preds)
@@ -148,12 +155,14 @@ def main() -> None:
         predicted_all.extend(preds.tolist())
         print(f"Run {i + 1}/{args.n_repeats}: "
               f"train={len(X_train)} test={len(X_test)} "
-              f"accuracy={acc:.4f} ({time.time() - start:.1f}s)")
+              f"accuracy={acc:.4f} ({time.perf_counter() - start:.1f}s)")
 
     accuracies = np.array(accuracies)
+    # Sample std (ddof=1, as R's sd()) needs at least two runs.
+    std = f"{accuracies.std(ddof=1):.4f}" if args.n_repeats > 1 else "n/a"
     print(f"\nAccuracy over {args.n_repeats} run(s) "
           f"with {args.test_percent:g}% test rows: "
-          f"mean={accuracies.mean():.4f} std={accuracies.std():.4f} "
+          f"mean={accuracies.mean():.4f} std={std} "
           f"min={accuracies.min():.4f} max={accuracies.max():.4f}")
 
     print(f"\nConfusion matrix and statistics "
